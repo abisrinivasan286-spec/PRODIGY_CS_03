@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Password Strength Checker</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f7fb; padding: 30px; }
+    .card { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    input { width: 100%; padding: 10px; margin-top: 10px; font-size: 16px; }
+    .progress { height: 15px; border-radius: 8px; margin: 12px 0; background: #eee; }
+    .bar { height: 100%; width: 0%; border-radius: 8px; transition: width 0.3s; }
+    #result { font-weight: bold; margin-top: 10px; }
+    #suggestions { margin-top: 10px; color: #444; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Password Strength Checker</h2>
+    <input type="password" id="pw" placeholder="Type a password...">
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div id="result">Score: — | Verdict: —</div>
+    <div id="suggestions">Suggestions will appear here.</div>
+  </div>
+
+  <script>
+    const COMMON = ['password','123456','qwerty','letmein'];
+
+    function assessPassword(pw){
+      let score = 0;
+      let suggestions = [];
+
+      if(pw.length >= 16) score += 40;
+      else if(pw.length >= 12) score += 25;
+      else if(pw.length >= 8) score += 10;
+      else suggestions.push("Make it longer (12+ characters).");
+
+      if(/[a-z]/.test(pw)) score += 10; else suggestions.push("Add lowercase letters.");
+      if(/[A-Z]/.test(pw)) score += 10; else suggestions.push("Add uppercase letters.");
+      if(/[0-9]/.test(pw)) score += 10; else suggestions.push("Add digits (0-9).");
+      if(/[^A-Za-z0-9]/.test(pw)) score += 15; else suggestions.push("Add special characters (!@#$%).");
+
+      if(COMMON.some(c => pw.toLowerCase().includes(c))){
+        score -= 40;
+        suggestions.push("Avoid common words like 'password' or '123456'.");
+      }
+
+      score = Math.max(0, Math.min(100, score));
+
+      let verdict = "Very weak";
+      if(score >= 85) verdict = "Very strong";
+      else if(score >= 70) verdict = "Strong";
+      else if(score >= 50) verdict = "Moderate";
+      else if(score >= 30) verdict = "Weak";
+
+      return {score, verdict, suggestions};
+    }
+
+    const pwInput = document.getElementById('pw');
+    const bar = document.getElementById('bar');
+    const result = document.getElementById('result');
+    const suggBox = document.getElementById('suggestions');
+
+    pwInput.addEventListener('input', () => {
+      const {score, verdict, suggestions} = assessPassword(pwInput.value);
+      bar.style.width = score + "%";
+      bar.style.background = score < 30 ? "red" :
+                             score < 50 ? "orange" :
+                             score < 70 ? "gold" :
+                             score < 85 ? "blue" : "green";
+      result.textContent = `Score: ${score} | Verdict: ${verdict}`;
+      suggBox.innerHTML = suggestions.length ? "Suggestions:<br>" + suggestions.join("<br>") : "Looks good!";
+    });
+  </script>
+</body>
+</html>
